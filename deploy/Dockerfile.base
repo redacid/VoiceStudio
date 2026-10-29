@@ -1,0 +1,87 @@
+# ──────────────────────────────────────────────────────────────
+#  VoiceStudio — base image (system + Python dependencies only)
+#
+#  Two flavors from one file; `make docker-build-base-cpu` / `-gpu` pass the
+#  right pair:
+#    FLAVOR=cpu   BASE_IMAGE=python:3.12-slim-bookworm  (CPU torch wheels)
+#    FLAVOR=cuda  BASE_IMAGE=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime
+#
+#  Holds everything slow to build and rarely changing: apt packages, uv,
+#  torch and every dependency from pyproject.toml. The app image
+#  (deploy/Dockerfile.app) adds the source and frontend on top, so a code
+#  change rebuilds in minutes. Rebuild the base when pyproject.toml, uv.lock
+#  or deploy/*-constraints/overrides change.
+#
+#  Mirrors the dependency steps of deploy/Dockerfile (the upstream single-stage
+#  image); keep the two in step.
+# ──────────────────────────────────────────────────────────────
+ARG BASE_IMAGE=python:3.12-slim-bookworm
+FROM ${BASE_IMAGE}
+
+ARG FLAVOR=cpu
+ENV VOICESTUDIO_IMAGE_FLAVOR=${FLAVOR}
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
+    UV_BREAK_SYSTEM_PACKAGES=1
+
+# FFmpeg is critical for torchaudio/scene splitting; build-essential for
+# packages that compile at install time.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ffmpeg \
+    libsndfile1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install --no-cache-dir uv
+
+COPY deploy/torch-constraints.txt deploy/uv-overrides.txt ./deploy/
+
+# CPU: preinstall the CPU-only torch trio from PyTorch's CPU index (no PyPI
+# fallback), so the dependency install below keeps it instead of pulling the
+# multi-GB CUDA wheels. The CUDA base already ships its GPU torch.
+RUN if [ "$FLAVOR" = "cpu" ]; then \
+        uv pip install --python "$(command -v python3)" --no-cache \
+            --index-url https://download.pytorch.org/whl/cpu \
+            --constraint deploy/torch-constraints.txt \
+            torch torchaudio torchvision; \
+    fi
+
+# Dependencies only (`-r pyproject.toml`): the omnivoice package itself is
+# installed by the app image. Same --constraint/--override reasoning as
+# deploy/Dockerfile (#1357, #3275); without --upgrade the preinstalled torch
+# survives.
+COPY pyproject.toml ./
+RUN uv pip install --python "$(command -v python3)" --no-cache \
+    --constraint deploy/torch-constraints.txt \
+    --override deploy/uv-overrides.txt \
+    -r pyproject.toml
+
+# Guard: every security override must be what the image actually installed.
+RUN python3 -c "from importlib.metadata import version; from packaging.requirements import Requirement; \
+    reqs = [Requirement(l.strip()) for l in open('deploy/uv-overrides.txt') if l.strip() and not l.lstrip().startswith('#')]; \
+    bad = [f'{r.name} {version(r.name)} does not satisfy {r}' for r in reqs if not r.specifier.contains(version(r.name), prereleases=True)]; \
+    assert not bad, bad; \
+    print('uv overrides applied:', ', '.join(f'{r.name} {version(r.name)}' for r in reqs))"
+
+# Guard: the torch build matches the flavor (CPU image must not carry CUDA
+# wheels, CUDA image must keep its GPU torch).
+RUN python3 -c "import os, torch, torchaudio, torchvision; \
+    flavor = os.environ['VOICESTUDIO_IMAGE_FLAVOR']; \
+    print(f'torch={torch.__version__} torchaudio={torchaudio.__version__} torchvision={torchvision.__version__} cuda={torch.version.cuda}'); \
+    assert (torch.version.cuda is None) == (flavor == 'cpu'), f'{flavor} image got torch {torch.__version__}'; \
+    import torchvision.ops; torchvision.ops.nms; \
+    print('torchvision C++ ops resolve against this torch')"
+
+# CTranslate2 (WhisperX, faster-whisper) needs cuDNN 8 next to the base's
+# cuDNN 9 (#1371); placed where backend/core/cudnn8.py looks. CUDA x86-64 only.
+RUN if [ "$FLAVOR" = "cuda" ] && [ "$(uname -m)" != "aarch64" ]; then \
+        target="$(python3 -c "import sys; print(f'{sys.prefix}/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages/cudnn8_compat')")" \
+        && uv pip install --python "$(command -v python3)" --no-cache --no-deps \
+            --target "$target" nvidia-cudnn-cu12==8.9.7.29 \
+        && CUDNN8_TARGET="$target" python3 -c "import glob, os; t = os.environ['CUDNN8_TARGET']; found = [f for f in glob.glob(t + '/nvidia/cudnn/lib/*') if '.so.8' in f]; assert found, 'cuDNN 8 libraries missing from ' + t; print(f'cuDNN 8 compat: {len(found)} libraries in ' + t)"; \
+    fi

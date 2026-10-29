@@ -3,33 +3,40 @@
 
 .PHONY: help release release-dry release-publish virustotal \
 	setup dev web api \
-	docker-build docker-build-rocm docker-build-cuda-arm64 docker-build-all \
-	docker-run docker-push
+	docker-base docker-base-cpu docker-base-gpu docker-app docker-app-cpu docker-app-gpu \
+	docker-build docker-push-base docker-push-app docker-push docker-run
 
 .DEFAULT_GOAL := help
 
 PYTHON ?= python3
 
 # ── Docker image settings (override on the command line) ─────────────────
-# make docker-build IMAGE=ghcr.io/me/voicestudio IMAGE_TAG=dev
+# Two layers: a base image per flavor (system + Python deps, rebuilt rarely)
+# and an app image for the current version on top of it.
+#   redacid/voicestudio:base-cpu      redacid/voicestudio:base-gpu
+#   redacid/voicestudio:<version>-cpu redacid/voicestudio:<version>-gpu
+#   (+ latest-cpu / latest-gpu)
 VERSION      := $(shell sed -nE 's/^[[:space:]]*"version":[[:space:]]*"([^"]+)".*/\1/p' package.json | head -n1)
 BUILD_COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null || echo unknown)
-IMAGE        ?= voicestudio
+IMAGE        ?= redacid/voicestudio
 IMAGE_TAG    ?= $(VERSION)
-# CUDA and ROCm images are x86-64; pin the platform so Apple Silicon hosts
-# build the image GPU clouds actually run.
+# GPU clouds run x86-64; pin it so Apple Silicon hosts build the same image.
 PLATFORM     ?= linux/amd64
 DOCKER       ?= docker
 DOCKER_BUILD_ARGS ?=
-ROCM_BASE_IMAGE ?= rocm/pytorch:rocm7.2.4_ubuntu24.04_py3.12_pytorch_release_2.8.0
+BASE_FROM_cpu ?= python:3.12-slim-bookworm
+BASE_FROM_gpu ?= pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime
+FLAVORS      := cpu gpu
+# Dockerfile.base's torch flavor for each image flavor.
+torch_flavor = $(if $(filter gpu,$(1)),cuda,cpu)
 
 # docker-run settings
+FLAVOR      ?= cpu
 PORT        ?= 3900
 DATA_VOLUME ?= omnivoice-data
-GPU         ?= cuda
 
 help: ## Show this help
-	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_ -]+:.*## / {printf "  \033[36m%-34s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # ── Local run ────────────────────────────────────────────────────────────
 
@@ -48,37 +55,39 @@ api: ## Run only the backend API with auto-reload (:3900)
 
 # ── Docker images ────────────────────────────────────────────────────────
 
-docker-build: ## Build the CUDA image: IMAGE:IMAGE_TAG (default voicestudio:<version>)
-	$(DOCKER) build -f deploy/Dockerfile --platform $(PLATFORM) \
+docker-base: $(addprefix docker-base-,$(FLAVORS)) ## Build both base images (cpu + gpu)
+
+docker-base-cpu docker-base-gpu: docker-base-%: ## Build one base image: IMAGE:base-cpu / base-gpu
+	$(DOCKER) build -f deploy/Dockerfile.base --platform $(PLATFORM) \
+		--build-arg BASE_IMAGE=$(BASE_FROM_$*) --build-arg FLAVOR=$(call torch_flavor,$*) \
+		$(DOCKER_BUILD_ARGS) -t $(IMAGE):base-$* .
+
+docker-app: $(addprefix docker-app-,$(FLAVORS)) ## Build both app images for the current version
+
+docker-app-cpu docker-app-gpu: docker-app-%: ## Build one app image on IMAGE:base-*: IMAGE:<version>-cpu / -gpu
+	$(DOCKER) build -f deploy/Dockerfile.app --platform $(PLATFORM) \
+		--build-arg BASE_IMAGE=$(IMAGE):base-$* \
 		--build-arg BUILD_COMMIT=$(BUILD_COMMIT) $(DOCKER_BUILD_ARGS) \
-		-t $(IMAGE):$(IMAGE_TAG) .
+		-t $(IMAGE):$(IMAGE_TAG)-$* -t $(IMAGE):latest-$* .
 
-docker-build-rocm: ## Build the AMD ROCm image: IMAGE:IMAGE_TAG-rocm
-	$(DOCKER) build -f deploy/Dockerfile --platform $(PLATFORM) \
-		--build-arg BASE_IMAGE=$(ROCM_BASE_IMAGE) --build-arg GPU_FLAVOR=rocm \
-		--build-arg BUILD_COMMIT=$(BUILD_COMMIT) $(DOCKER_BUILD_ARGS) \
-		-t $(IMAGE):$(IMAGE_TAG)-rocm .
+docker-build: docker-base docker-app ## Build everything: both bases, then both app images
 
-docker-build-cuda-arm64: ## Build the arm64 NVIDIA image (DGX Spark/Grace): IMAGE:IMAGE_TAG-cuda-arm64
-	$(DOCKER) build -f deploy/Dockerfile --platform linux/arm64 \
-		--build-arg BASE_IMAGE=cuda-arm64-base --build-arg GPU_FLAVOR=cuda \
-		--build-arg BUILD_COMMIT=$(BUILD_COMMIT) $(DOCKER_BUILD_ARGS) \
-		-t $(IMAGE):$(IMAGE_TAG)-cuda-arm64 .
+docker-push-base: ## Push both base images
+	$(foreach f,$(FLAVORS),$(DOCKER) push $(IMAGE):base-$(f) &&) true
 
-docker-build-all: docker-build docker-build-rocm docker-build-cuda-arm64 ## Build every image variant
+docker-push-app: ## Push both app images (<version>-* and latest-*)
+	$(foreach f,$(FLAVORS),$(DOCKER) push $(IMAGE):$(IMAGE_TAG)-$(f) && $(DOCKER) push $(IMAGE):latest-$(f) &&) true
 
-docker-run: ## Run a built image locally: make docker-run [GPU=cuda|rocm|cpu]
+docker-push: docker-push-base docker-push-app ## Push all images to Docker Hub (run docker login first)
+
+docker-run: ## Run an app image locally: make docker-run [FLAVOR=cpu|gpu]
 	@test -n "$$OMNIVOICE_API_KEY" || { echo "export a long random OMNIVOICE_API_KEY first"; exit 2; }
 	$(DOCKER) run --rm -it --name voicestudio \
-		$(if $(filter cuda,$(GPU)),--gpus all) \
-		$(if $(filter rocm,$(GPU)),--device /dev/kfd --device /dev/dri) \
+		$(if $(filter gpu,$(FLAVOR)),--gpus all) \
 		-p 127.0.0.1:$(PORT):3900 \
 		-e OMNIVOICE_API_KEY -e HF_TOKEN \
 		-v $(DATA_VOLUME):/app/omnivoice_data \
-		$(IMAGE):$(IMAGE_TAG)$(if $(filter rocm,$(GPU)),-rocm)
-
-docker-push: ## Push IMAGE:IMAGE_TAG to its registry (set IMAGE=registry/user/voicestudio)
-	$(DOCKER) push $(IMAGE):$(IMAGE_TAG)
+		$(IMAGE):$(IMAGE_TAG)-$(FLAVOR)
 
 # ── Release ──────────────────────────────────────────────────────────────
 

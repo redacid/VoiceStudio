@@ -147,18 +147,28 @@ To build it yourself on an arm64 host:
 docker build -f deploy/Dockerfile --build-arg BASE_IMAGE=cuda-arm64-base -t voicestudio:cuda-arm64 .
 ```
 
-From a source checkout, `make` wraps every variant with the same build args CI
-uses (`make help` lists them):
+From a source checkout, `make` builds a two-layer image (`make help` lists
+every target). A **base image** per flavor holds the system and Python
+dependencies and is rebuilt only when `pyproject.toml` or `deploy/` pins
+change; the **app image** adds the current source on top and rebuilds in
+minutes:
+
+| Image | Built from | Tag |
+|---|---|---|
+| CPU base | `deploy/Dockerfile.base`, `FLAVOR=cpu` | `redacid/voicestudio:base-cpu` |
+| GPU base (CUDA 12.8) | `deploy/Dockerfile.base`, `FLAVOR=cuda` | `redacid/voicestudio:base-gpu` |
+| App | `deploy/Dockerfile.app` on a base | `:<version>-cpu` / `:<version>-gpu`, plus `:latest-cpu` / `:latest-gpu` |
 
 ```bash
-make docker-build             # CUDA (x86-64)  → voicestudio:<version>
-make docker-build-rocm        # AMD ROCm       → voicestudio:<version>-rocm
-make docker-build-cuda-arm64  # arm64 NVIDIA   → voicestudio:<version>-cuda-arm64
-make docker-run GPU=cuda      # run a built image (cuda | rocm | cpu); needs OMNIVOICE_API_KEY
-make docker-push IMAGE=ghcr.io/<you>/voicestudio
+make docker-base-cpu          # or docker-base-gpu, or docker-base for both
+make docker-app-cpu           # or docker-app-gpu, or docker-app for both
+make docker-build             # both bases, then both app images
+make docker-run FLAVOR=gpu    # run an app image (cpu | gpu); needs OMNIVOICE_API_KEY
+docker login && make docker-push   # push bases and app images to Docker Hub
 ```
 
-Override `IMAGE`, `IMAGE_TAG`, `PLATFORM` or `DOCKER_BUILD_ARGS` on the command line.
+Override `IMAGE`, `IMAGE_TAG`, `PLATFORM` (default `linux/amd64`),
+`BASE_FROM_cpu` / `BASE_FROM_gpu` or `DOCKER_BUILD_ARGS` on the command line.
 
 All image variants verify installed dependency versions against
 `deploy/uv-overrides.txt` after installation. The check strips surrounding
