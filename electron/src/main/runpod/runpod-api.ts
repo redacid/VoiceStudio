@@ -44,6 +44,14 @@ export interface PodSpec {
   env: Record<string, string>;
 }
 
+/** Lower sorts first: the GPUs most likely to be free now. */
+export const AVAILABILITY_RANK: Record<Availability, number> = {
+  HIGH: 0,
+  MEDIUM: 1,
+  LOW: 2,
+  NONE: 3,
+};
+
 export class RunPodError extends Error {
   constructor(
     message: string,
@@ -118,7 +126,7 @@ export class RunPodApi {
     await this.call('DELETE', `/pods/${encodeURIComponent(id)}`);
   }
 
-  /** NVIDIA GPUs offered with CUDA 12.8+, cheapest first, and the account's network volumes. */
+  /** NVIDIA GPUs offered with CUDA 12.8+, most available then cheapest first, and the account's network volumes. */
   async catalog(cloud: Cloud): Promise<Catalog> {
     const query = new URLSearchParams({
       include: 'AVAILABILITY',
@@ -144,7 +152,12 @@ export class RunPodApi {
           availability: (g.availability ?? 'NONE') as Availability,
           dataCenters: (g.dataCenters ?? []).map((d) => String(d.id)),
         }))
-        .sort((a, b) => a.price - b.price),
+        // What can be rented now first, then the cheapest.
+        .sort(
+          (a, b) =>
+            AVAILABILITY_RANK[a.availability] - AVAILABILITY_RANK[b.availability] ||
+            a.price - b.price,
+        ),
       volumes: list<ApiVolume>(volumes, 'networkVolumes').map((v) => ({
         id: String(v.id),
         name: String(v.name ?? v.id),

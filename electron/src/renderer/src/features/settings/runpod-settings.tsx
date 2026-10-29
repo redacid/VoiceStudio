@@ -15,7 +15,9 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { getBridge } from '@/components/bridge';
 import { ConfirmDialog } from '@/features/clone/confirm-dialog';
+import { cn } from '@/lib/utils';
 import type {
+  RunPodAvailability,
   RunPodCatalog,
   RunPodPublicState,
   RunPodSettings as Settings,
@@ -24,6 +26,43 @@ import { SettingsRow, SettingsSection } from './settings-layout';
 
 const NO_VOLUME = '__none__';
 const BUSY = new Set(['creating', 'starting', 'waiting', 'connecting', 'stopping']);
+
+type Gpu = RunPodCatalog['gpus'][number];
+
+const AVAILABILITY_STYLE: Record<RunPodAvailability, string> = {
+  HIGH: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  MEDIUM: 'bg-lime-500/15 text-lime-700 dark:text-lime-400',
+  LOW: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  NONE: 'bg-muted text-muted-foreground',
+};
+
+/** One GPU as the picker shows it: the full name, then colored memory, price and availability. */
+function GpuOption({ gpu, name }: { gpu: Gpu | undefined; name: string }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={cn(
+        'flex min-w-0 flex-wrap items-center gap-1.5',
+        gpu?.availability === 'NONE' && 'opacity-60',
+      )}
+    >
+      <span className="font-medium whitespace-normal">{name.replace(/^NVIDIA\s+/, '')}</span>
+      {gpu && (
+        <>
+          <span className="rounded bg-sky-500/15 px-1.5 text-xs text-sky-700 tabular-nums dark:text-sky-400">
+            {t('runpod.gpu_memory', { memory: gpu.memory })}
+          </span>
+          <span className="rounded bg-violet-500/15 px-1.5 text-xs text-violet-700 tabular-nums dark:text-violet-400">
+            {t('runpod.gpu_price', { price: gpu.price.toFixed(2) })}
+          </span>
+          <span className={cn('rounded px-1.5 text-xs', AVAILABILITY_STYLE[gpu.availability])}>
+            {t(`runpod.availability_${gpu.availability.toLowerCase()}`)}
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
 
 /** Rent a RunPod GPU pod running the VoiceStudio image and use it as the backend. */
 export function RunPodSettings({
@@ -87,15 +126,9 @@ export function RunPodSettings({
   const working = busy || BUSY.has(phase);
   const pod = data?.pod;
   const active = pod && ['PROVISIONING', 'STARTING', 'RUNNING'].includes(pod.status);
-  const gpuItems = (catalog?.gpus ?? []).map((gpu) => ({
-    value: gpu.id,
-    label: t('runpod.gpu_option', {
-      gpu: gpu.id,
-      memory: gpu.memory,
-      price: gpu.price.toFixed(2),
-      availability: t(`runpod.availability_${gpu.availability.toLowerCase()}`),
-    }),
-  }));
+  // Main sends the catalog most available first, then cheapest.
+  const gpuItems = (catalog?.gpus ?? []).map((gpu) => ({ value: gpu.id, label: gpu.id }));
+  const gpuById = new Map((catalog?.gpus ?? []).map((gpu) => [gpu.id, gpu]));
   if (settings?.gpu && !gpuItems.some((item) => item.value === settings.gpu))
     gpuItems.unshift({ value: settings.gpu, label: settings.gpu });
   const volumeItems = [
@@ -185,7 +218,11 @@ export function RunPodSettings({
               }}
             />
           </SettingsRow>
-          <SettingsRow id="runpod-gpu" title={t('runpod.gpu')} description={t('runpod.gpu_desc')}>
+          <SettingsRow
+            id="runpod-cloud"
+            title={t('runpod.cloud')}
+            description={t('runpod.cloud_desc')}
+          >
             <Select
               items={cloudItems}
               value={settings.cloud}
@@ -208,25 +245,6 @@ export function RunPodSettings({
                 ))}
               </SelectContent>
             </Select>
-            <Select
-              items={gpuItems}
-              value={settings.gpu}
-              disabled={working || Boolean(data?.podId)}
-              onValueChange={(value) => {
-                if (typeof value === 'string') void save({ gpu: value });
-              }}
-            >
-              <SelectTrigger className="min-w-64" aria-label={t('runpod.gpu')}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {gpuItems.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Button
               variant="outline"
               size="sm"
@@ -235,6 +253,35 @@ export function RunPodSettings({
             >
               {t('runpod.load_catalog')}
             </Button>
+          </SettingsRow>
+          <SettingsRow id="runpod-gpu" title={t('runpod.gpu')} description={t('runpod.gpu_desc')}>
+            <Select
+              items={gpuItems}
+              value={settings.gpu}
+              disabled={working || Boolean(data?.podId)}
+              onValueChange={(value) => {
+                if (typeof value === 'string') void save({ gpu: value });
+              }}
+            >
+              <SelectTrigger
+                className="h-auto min-h-8 w-full max-w-xl whitespace-normal"
+                aria-label={t('runpod.gpu')}
+              >
+                <SelectValue>
+                  {(value: string) => <GpuOption gpu={gpuById.get(value)} name={value} />}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent
+                alignItemWithTrigger={false}
+                className="w-auto max-w-[min(40rem,90vw)] min-w-(--anchor-width)"
+              >
+                {gpuItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value} className="whitespace-normal">
+                    <GpuOption gpu={gpuById.get(item.value)} name={item.value} />
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </SettingsRow>
           <SettingsRow
             id="runpod-volume"

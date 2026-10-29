@@ -47,7 +47,7 @@ describe('podBody', () => {
 });
 
 describe('RunPodApi', () => {
-  it('lists NVIDIA GPUs of the chosen cloud cheapest first', async () => {
+  it('lists NVIDIA GPUs of the chosen cloud, most available first, then cheapest', async () => {
     const fetchImpl = vi.fn(async (url: string | URL | Request) =>
       String(url).includes('/catalog/gpus')
         ? json(200, {
@@ -58,6 +58,22 @@ describe('RunPodApi', () => {
                 memory: 80,
                 secure: true,
                 price: { secure: 1.9 },
+                availability: 'LOW',
+              },
+              {
+                id: 'H100',
+                manufacturer: 'NVIDIA',
+                memory: 80,
+                secure: true,
+                price: { secure: 2.5 },
+                availability: 'HIGH',
+              },
+              {
+                id: '5090',
+                manufacturer: 'NVIDIA',
+                memory: 32,
+                secure: true,
+                price: { secure: 0.6 },
               },
               {
                 id: '4090',
@@ -65,6 +81,7 @@ describe('RunPodApi', () => {
                 memory: 24,
                 secure: true,
                 price: { secure: 0.7 },
+                availability: 'LOW',
               },
               { id: 'MI300', manufacturer: 'AMD', memory: 192, secure: true, price: { secure: 2 } },
               { id: 'L4', manufacturer: 'NVIDIA', memory: 24, secure: false, community: true },
@@ -75,7 +92,8 @@ describe('RunPodApi', () => {
           }),
     );
     const catalog = await new RunPodApi('key', fetchImpl as typeof fetch).catalog('SECURE');
-    expect(catalog.gpus.map((gpu) => gpu.id)).toEqual(['4090', 'A100']);
+    // H100 is free now; 5090 (no availability reported) is not, so it goes last.
+    expect(catalog.gpus.map((gpu) => gpu.id)).toEqual(['H100', '4090', 'A100', '5090']);
     expect(catalog.volumes).toEqual([{ id: 'v', name: 'data', size: 100, dataCenter: 'EU-RO-1' }]);
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toContain(`minCudaVersion=${MIN_CUDA}`);
