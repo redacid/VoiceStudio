@@ -147,6 +147,19 @@ To build it yourself on an arm64 host:
 docker build -f deploy/Dockerfile --build-arg BASE_IMAGE=cuda-arm64-base -t voicestudio:cuda-arm64 .
 ```
 
+From a source checkout, `make` wraps every variant with the same build args CI
+uses (`make help` lists them):
+
+```bash
+make docker-build             # CUDA (x86-64)  → voicestudio:<version>
+make docker-build-rocm        # AMD ROCm       → voicestudio:<version>-rocm
+make docker-build-cuda-arm64  # arm64 NVIDIA   → voicestudio:<version>-cuda-arm64
+make docker-run GPU=cuda      # run a built image (cuda | rocm | cpu); needs OMNIVOICE_API_KEY
+make docker-push IMAGE=ghcr.io/<you>/voicestudio
+```
+
+Override `IMAGE`, `IMAGE_TAG`, `PLATFORM` or `DOCKER_BUILD_ARGS` on the command line.
+
 All image variants verify installed dependency versions against
 `deploy/uv-overrides.txt` after installation. The check strips surrounding
 whitespace and line endings before parsing requirements, including with

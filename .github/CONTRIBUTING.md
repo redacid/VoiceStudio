@@ -84,6 +84,9 @@ bun run smoke-test -- --install  # also install and start the managed backend
 bun run dev:web     # maintained Electron renderer in a browser + backend
 ```
 
+The same flows have `make` shortcuts (`make help` lists them): `make setup`,
+`make dev`, `make web` and `make api` (backend only on `:3900`).
+
 `bun run dev:web` starts both services:
 
 | Service | URL | What it does |
