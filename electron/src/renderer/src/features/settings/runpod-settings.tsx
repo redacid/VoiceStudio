@@ -273,7 +273,9 @@ export function RunPodSettings({
               </SelectTrigger>
               <SelectContent
                 alignItemWithTrigger={false}
-                className="w-auto max-w-[min(40rem,90vw)] min-w-(--anchor-width)"
+                // Keep clear of the window's top bar (h-9, a drag region) and edges.
+                collisionPadding={{ top: 48, bottom: 12, left: 12, right: 12 }}
+                className="max-h-[min(var(--available-height),26rem)] w-auto max-w-[min(40rem,90vw)] min-w-(--anchor-width)"
               >
                 {gpuItems.map((item) => (
                   <SelectItem key={item.value} value={item.value} className="whitespace-normal">
