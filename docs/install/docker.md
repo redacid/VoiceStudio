@@ -163,9 +163,14 @@ minutes:
 make docker-base-cpu          # or docker-base-gpu, or docker-base for both
 make docker-app-cpu           # or docker-app-gpu, or docker-app for both
 make docker-build             # both bases, then both app images
-make docker-run FLAVOR=gpu    # run an app image (cpu | gpu); needs OMNIVOICE_API_KEY
+make docker-run-cpu           # run the local image in the foreground (or docker-run-gpu)
+make docker-up FLAVOR=gpu     # run it in the background; docker-logs / docker-stop
 docker login && make docker-push   # push bases and app images to Docker Hub
 ```
+
+The run targets publish the UI on `http://localhost:3900` (`PORT=`) with the
+`omnivoice-data` volume. They reuse `OMNIVOICE_API_KEY` from your shell, or
+generate one on first run into the git-ignored `.env`.
 
 Override `IMAGE`, `IMAGE_TAG`, `PLATFORM` (default `linux/amd64`),
 `BASE_FROM_cpu` / `BASE_FROM_gpu` or `DOCKER_BUILD_ARGS` on the command line.

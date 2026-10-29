@@ -4,7 +4,8 @@
 .PHONY: help release release-dry release-publish virustotal \
 	setup dev web api \
 	docker-base docker-base-cpu docker-base-gpu docker-app docker-app-cpu docker-app-gpu \
-	docker-build docker-push-base docker-push-app docker-push docker-run
+	docker-build docker-push-base docker-push-app docker-push \
+	docker-run docker-run-cpu docker-run-gpu docker-up docker-logs docker-stop
 
 .DEFAULT_GOAL := help
 
@@ -34,6 +35,8 @@ torch_flavor = $(if $(filter gpu,$(1)),cuda,cpu)
 FLAVOR      ?= cpu
 PORT        ?= 3900
 DATA_VOLUME ?= omnivoice-data
+CONTAINER   ?= voicestudio
+DOCKER_RUN_ARGS ?=
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_ -]+:.*## / {printf "  \033[36m%-34s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -80,14 +83,41 @@ docker-push-app: ## Push both app images (<version>-* and latest-*)
 
 docker-push: docker-push-base docker-push-app ## Push all images to Docker Hub (run docker login first)
 
-docker-run: ## Run an app image locally: make docker-run [FLAVOR=cpu|gpu]
-	@test -n "$$OMNIVOICE_API_KEY" || { echo "export a long random OMNIVOICE_API_KEY first"; exit 2; }
-	$(DOCKER) run --rm -it --name voicestudio \
-		$(if $(filter gpu,$(FLAVOR)),--gpus all) \
+# Local runs reuse one admin key, generated on first run and kept in the
+# git-ignored .env (an exported OMNIVOICE_API_KEY wins).
+API_KEY_FILE := .env
+define ensure_api_key
+	@if [ -z "$$OMNIVOICE_API_KEY" ] && ! grep -qs '^OMNIVOICE_API_KEY=' $(API_KEY_FILE); then \
+		echo "OMNIVOICE_API_KEY=$$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" >> $(API_KEY_FILE); \
+		echo "Generated OMNIVOICE_API_KEY in $(API_KEY_FILE)"; \
+	fi
+endef
+api_key = $${OMNIVOICE_API_KEY:-$$(sed -n 's/^OMNIVOICE_API_KEY=//p' $(API_KEY_FILE) | head -n1)}
+
+docker_run = $(DOCKER) run --rm --name $(CONTAINER) \
+		$(if $(filter gpu,$(1)),--gpus all) \
 		-p 127.0.0.1:$(PORT):3900 \
-		-e OMNIVOICE_API_KEY -e HF_TOKEN \
+		-e OMNIVOICE_API_KEY="$(api_key)" -e HF_TOKEN \
 		-v $(DATA_VOLUME):/app/omnivoice_data \
-		$(IMAGE):$(IMAGE_TAG)-$(FLAVOR)
+		$(IMAGE):$(IMAGE_TAG)-$(1)
+
+docker-run: docker-run-$(FLAVOR) ## Run the local app image in the foreground: make docker-run [FLAVOR=cpu|gpu]
+
+docker-run-cpu docker-run-gpu: docker-run-%: ## Run the local cpu / gpu app image in the foreground (Ctrl+C stops)
+	$(ensure_api_key)
+	@echo "VoiceStudio: http://localhost:$(PORT)"
+	$(subst --rm ,--rm -it ,$(call docker_run,$*)) $(DOCKER_RUN_ARGS)
+
+docker-up: ## Start the local app image in the background: make docker-up [FLAVOR=cpu|gpu]
+	$(ensure_api_key)
+	$(subst --rm ,--rm -d ,$(call docker_run,$(FLAVOR))) $(DOCKER_RUN_ARGS)
+	@echo "VoiceStudio: http://localhost:$(PORT)  (make docker-logs / make docker-stop)"
+
+docker-logs: ## Follow logs of the background container
+	$(DOCKER) logs -f $(CONTAINER)
+
+docker-stop: ## Stop the background container (data volume is kept)
+	$(DOCKER) stop $(CONTAINER)
 
 # ── Release ──────────────────────────────────────────────────────────────
 
