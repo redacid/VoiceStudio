@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import os
+import re
 from urllib.parse import SplitResult, urlsplit
 
-from core.app_config import DEFAULT_WEB_PORT
+from core.app_config import DEFAULT_BACKEND_PORT, DEFAULT_WEB_PORT
 
 
 CSRF_HEADER = "x-voicestudio-csrf"
@@ -122,6 +123,25 @@ def ui_port() -> int:
     return configured_ui_port() or DEFAULT_UI_PORT
 
 
+def runpod_proxy_origin() -> str | None:
+    """The public origin RunPod's HTTPS proxy serves this backend under, inside a RunPod pod.
+
+    RunPod sets ``RUNPOD_POD_ID`` in every pod and publishes an exposed HTTP
+    port as ``https://<pod id>-<port>.proxy.runpod.net``. Its proxy does not
+    forward that host and scheme to the container, so the exact-origin check
+    cannot see that a browser on that URL is same-origin: logging in to the
+    web UI there failed with "browser origin rejected" (403) and every
+    WebSocket was refused. The origin names this very backend, so trusting it
+    is equivalent to the same-origin rule, not a widening of it.
+    """
+    pod_id = os.environ.get("RUNPOD_POD_ID", "").strip().lower()
+    if not re.fullmatch(r"[a-z0-9]{1,64}", pod_id):
+        return None
+    raw = os.environ.get("OMNIVOICE_PORT", "").strip()
+    port = int(raw) if raw.isdigit() and 0 < int(raw) <= 65535 else DEFAULT_BACKEND_PORT
+    return f"https://{pod_id}-{port}.proxy.runpod.net"
+
+
 def allowed_origin_values() -> list[str]:
     """Raw allow-list entries shared by CORS (main.py) and the CSRF checks."""
     port = ui_port()
@@ -129,6 +149,8 @@ def allowed_origin_values() -> list[str]:
         "OMNIVOICE_ALLOWED_ORIGINS",
         f"http://localhost:{port},http://127.0.0.1:{port}," + ",".join(DEFAULT_DESKTOP_ORIGINS),
     ).split(",")
+    if runpod := runpod_proxy_origin():
+        values.append(runpod)
     return [value.strip() for value in values if value.strip()]
 
 

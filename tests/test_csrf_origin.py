@@ -25,6 +25,8 @@ def _clean_origin_environment(monkeypatch):
     monkeypatch.delenv("OMNIVOICE_ALLOWED_ORIGINS", raising=False)
     monkeypatch.delenv("OMNIVOICE_UI_PORT", raising=False)
     monkeypatch.delenv("VOICESTUDIO_UI_PORT", raising=False)
+    monkeypatch.delenv("RUNPOD_POD_ID", raising=False)
+    monkeypatch.delenv("OMNIVOICE_PORT", raising=False)
 
 
 def _connection(
@@ -221,3 +223,34 @@ def test_electron_origin_is_exact_and_respects_explicit_allowlists(monkeypatch):
         assert origin_allowed(_connection(origin=origin)) is False
     monkeypatch.setenv("OMNIVOICE_ALLOWED_ORIGINS", "https://ui.test")
     assert origin_allowed(_connection(origin="app://voicestudio")) is False
+
+
+def test_runpod_pod_trusts_its_own_proxy_origin_only(monkeypatch):
+    # RunPod's proxy hands the container plain http with an internal Host, so
+    # the browser's https://<pod>-3900.proxy.runpod.net looked cross-origin.
+    internal = "http://100.65.0.2:3900"
+    proxy = "https://abc123xyz-3900.proxy.runpod.net"
+    assert not cookie_csrf_allowed(_connection(origin=proxy, destination=internal))
+    monkeypatch.setenv("RUNPOD_POD_ID", "abc123xyz")
+    assert cookie_csrf_allowed(_connection(origin=proxy, destination=internal))
+    assert origin_allowed(_connection(origin=proxy, destination=internal, method="GET"))
+    for other in (
+        "https://other1-3900.proxy.runpod.net",
+        "https://abc123xyz-3901.proxy.runpod.net",
+        "http://abc123xyz-3900.proxy.runpod.net",
+    ):
+        assert not cookie_csrf_allowed(_connection(origin=other, destination=internal))
+    # It is added to an explicit allow-list too, and follows the backend port.
+    monkeypatch.setenv("OMNIVOICE_ALLOWED_ORIGINS", "https://voice.test")
+    monkeypatch.setenv("OMNIVOICE_PORT", "4000")
+    assert cookie_csrf_allowed(
+        _connection(origin="https://abc123xyz-4000.proxy.runpod.net", destination=internal)
+    )
+
+
+@pytest.mark.parametrize("pod_id", ["", "bad id", "a.b", "x" * 65])
+def test_malformed_runpod_pod_id_adds_no_origin(monkeypatch, pod_id):
+    import core.csrf as csrf
+
+    monkeypatch.setenv("RUNPOD_POD_ID", pod_id)
+    assert csrf.runpod_proxy_origin() is None
