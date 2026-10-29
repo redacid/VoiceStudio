@@ -4564,6 +4564,12 @@
     "error_api": "RunPod 錯誤：{{message}}",
     "error_timeout": "實例未能及時就緒。請重試，或在 runpod.io 查看記錄。",
     "error_failed": "實例啟動失敗。請在 runpod.io 查看記錄。",
-    "error_connect": "實例有回應，但應用程式無法連線（{{message}}）。"
+    "error_connect": "實例有回應，但應用程式無法連線（{{message}}）。",
+    "device": "後端裝置:{{device}}",
+    "device_cpu": "Pod 的後端在 CPU 上執行,而不是 GPU。請確認映像檔是 -gpu 建置(基於 base-gpu 的 make docker-app-gpu),且此後端的 設定 > 效能 > 運算裝置 為 自動 或 CUDA。",
+    "backend_key": "Pod 存取金鑰",
+    "backend_key_desc": "建立 Pod 時為其產生,並以 OMNIVOICE_API_KEY 傳入;應用程式以它登入。你的 RunPod API 金鑰只用於管理 Pod,不會進入 Pod。",
+    "copy_key": "複製金鑰",
+    "key_copied": "已複製"
   }
 }

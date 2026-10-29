@@ -4564,6 +4564,12 @@
     "error_api": "Erro de RunPod: {{message}}",
     "error_timeout": "O pod non estivo listo a tempo. Téntao de novo ou revisa os seus rexistros en runpod.io.",
     "error_failed": "O pod non puido iniciarse. Revisa os seus rexistros en runpod.io.",
-    "error_connect": "O pod responde, pero a app non puido conectarse ({{message}})."
+    "error_connect": "O pod responde, pero a app non puido conectarse ({{message}}).",
+    "device": "Dispositivo do backend: {{device}}",
+    "device_cpu": "O backend do pod execútase na CPU, non nunha GPU. Comproba que a imaxe sexa unha compilación -gpu (make docker-app-gpu sobre base-gpu) e que en Axustes > Rendemento > Dispositivo de cálculo deste backend estea en Auto ou CUDA.",
+    "backend_key": "Clave de acceso ao pod",
+    "backend_key_desc": "Xerouse para este pod ao crealo e pásaselle como OMNIVOICE_API_KEY; a app inicia sesión con ela. A túa clave de API de RunPod só xestiona pods e nunca chega ao pod.",
+    "copy_key": "Copiar clave",
+    "key_copied": "Copiada"
   }
 }

@@ -4564,6 +4564,12 @@
     "error_api": "RunPod hatası: {{message}}",
     "error_timeout": "Pod zamanında hazır olmadı. Tekrar deneyin veya runpod.io'daki günlüklerine bakın.",
     "error_failed": "Pod başlatılamadı. runpod.io'daki günlüklerine bakın.",
-    "error_connect": "Pod yanıt veriyor ama uygulama bağlanamadı ({{message}})."
+    "error_connect": "Pod yanıt veriyor ama uygulama bağlanamadı ({{message}}).",
+    "device": "Arka uç cihazı: {{device}}",
+    "device_cpu": "Pod'un arka ucu GPU'da değil CPU'da çalışıyor. İmajın -gpu derlemesi olduğunu (base-gpu üzerine make docker-app-gpu) ve bu arka uçta Ayarlar > Performans > Hesaplama cihazının Otomatik veya CUDA olduğunu kontrol edin.",
+    "backend_key": "Pod erişim anahtarı",
+    "backend_key_desc": "Bu pod oluşturulurken üretildi ve ona OMNIVOICE_API_KEY olarak verildi; uygulama bununla oturum açar. RunPod API anahtarınız yalnızca pod'ları yönetir ve pod'a hiç ulaşmaz.",
+    "copy_key": "Anahtarı kopyala",
+    "key_copied": "Kopyalandı"
   }
 }

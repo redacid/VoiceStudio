@@ -4564,6 +4564,12 @@
     "error_api": "RunPod 오류: {{message}}",
     "error_timeout": "포드가 제시간에 준비되지 않았습니다. 다시 시도하거나 runpod.io에서 로그를 확인하세요.",
     "error_failed": "포드를 시작하지 못했습니다. runpod.io에서 로그를 확인하세요.",
-    "error_connect": "포드는 응답하지만 앱이 연결하지 못했습니다({{message}})."
+    "error_connect": "포드는 응답하지만 앱이 연결하지 못했습니다({{message}}).",
+    "device": "백엔드 장치: {{device}}",
+    "device_cpu": "Pod의 백엔드가 GPU가 아닌 CPU에서 실행 중입니다. 이미지가 -gpu 빌드(base-gpu 기반 make docker-app-gpu)인지, 이 백엔드의 설정 > 성능 > 연산 장치가 자동 또는 CUDA인지 확인하세요.",
+    "backend_key": "Pod 액세스 키",
+    "backend_key_desc": "Pod를 만들 때 생성되어 OMNIVOICE_API_KEY로 전달됩니다. 앱은 이 키로 로그인합니다. RunPod API 키는 Pod 관리에만 쓰이며 Pod에 전달되지 않습니다.",
+    "copy_key": "키 복사",
+    "key_copied": "복사됨"
   }
 }

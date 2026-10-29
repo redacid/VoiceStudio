@@ -4564,6 +4564,12 @@
     "error_api": "RunPod エラー: {{message}}",
     "error_timeout": "ポッドの準備が時間内に完了しませんでした。再試行するか、runpod.io でログを確認してください。",
     "error_failed": "ポッドを起動できませんでした。runpod.io でログを確認してください。",
-    "error_connect": "ポッドは応答していますが、アプリから接続できませんでした ({{message}})。"
+    "error_connect": "ポッドは応答していますが、アプリから接続できませんでした ({{message}})。",
+    "device": "バックエンドのデバイス: {{device}}",
+    "device_cpu": "Pod のバックエンドは GPU ではなく CPU で動作しています。イメージが -gpu ビルド(base-gpu 上の make docker-app-gpu)であること、このバックエンドの 設定 > パフォーマンス > 計算デバイス が 自動 または CUDA であることを確認してください。",
+    "backend_key": "Pod のアクセスキー",
+    "backend_key_desc": "作成時にこの Pod 用に生成され、OMNIVOICE_API_KEY として渡されます。アプリはこれでサインインします。RunPod の API キーは Pod の管理にのみ使われ、Pod には届きません。",
+    "copy_key": "キーをコピー",
+    "key_copied": "コピーしました"
   }
 }

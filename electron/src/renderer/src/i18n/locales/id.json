@@ -4564,6 +4564,12 @@
     "error_api": "Galat RunPod: {{message}}",
     "error_timeout": "Pod tidak siap tepat waktu. Coba lagi atau periksa log-nya di runpod.io.",
     "error_failed": "Pod gagal dimulai. Periksa log-nya di runpod.io.",
-    "error_connect": "Pod merespons, tetapi aplikasi tidak dapat terhubung ({{message}})."
+    "error_connect": "Pod merespons, tetapi aplikasi tidak dapat terhubung ({{message}}).",
+    "device": "Perangkat backend: {{device}}",
+    "device_cpu": "Backend pod berjalan di CPU, bukan GPU. Pastikan image adalah build -gpu (make docker-app-gpu di atas base-gpu) dan Pengaturan > Performa > Perangkat komputasi untuk backend ini diatur ke Otomatis atau CUDA.",
+    "backend_key": "Kunci akses pod",
+    "backend_key_desc": "Dibuat untuk pod ini saat pembuatan dan diberikan sebagai OMNIVOICE_API_KEY; aplikasi masuk dengannya. Kunci API RunPod Anda hanya mengelola pod dan tidak pernah sampai ke pod.",
+    "copy_key": "Salin kunci",
+    "key_copied": "Disalin"
   }
 }

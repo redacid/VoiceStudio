@@ -4564,6 +4564,12 @@
     "error_api": "RunPod-fel: {{message}}",
     "error_timeout": "Podden blev inte klar i tid. Försök igen eller se dess loggar på runpod.io.",
     "error_failed": "Podden kunde inte starta. Se dess loggar på runpod.io.",
-    "error_connect": "Podden svarar, men appen kunde inte ansluta ({{message}})."
+    "error_connect": "Podden svarar, men appen kunde inte ansluta ({{message}}).",
+    "device": "Backend-enhet: {{device}}",
+    "device_cpu": "Poddens backend körs på CPU:n, inte på en GPU. Kontrollera att avbildningen är en -gpu-build (make docker-app-gpu på base-gpu) och att Inställningar > Prestanda > Beräkningsenhet är Auto eller CUDA för den här backenden.",
+    "backend_key": "Poddens åtkomstnyckel",
+    "backend_key_desc": "Skapades för den här podden när den skapades och skickas till den som OMNIVOICE_API_KEY; appen loggar in med den. Din RunPod-API-nyckel hanterar bara poddar och når aldrig podden.",
+    "copy_key": "Kopiera nyckel",
+    "key_copied": "Kopierad"
   }
 }

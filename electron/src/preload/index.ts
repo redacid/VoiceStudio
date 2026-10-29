@@ -106,6 +106,7 @@ const bridge: VoiceStudioBridge = {
     connect: () => ipcRenderer.invoke('runpod:connect'),
     stop: () => ipcRenderer.invoke('runpod:stop'),
     terminate: () => ipcRenderer.invoke('runpod:terminate'),
+    copyBackendKey: () => ipcRenderer.invoke('runpod:copy-backend-key'),
     onState: (cb) => subscribe<RunPodPublicState>('runpod:state', cb),
   },
   backend: {

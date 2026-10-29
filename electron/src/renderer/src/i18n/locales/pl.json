@@ -4592,6 +4592,12 @@
     "error_api": "Błąd RunPod: {{message}}",
     "error_timeout": "Pod nie był gotowy na czas. Spróbuj ponownie lub sprawdź jego logi na runpod.io.",
     "error_failed": "Pod nie uruchomił się. Sprawdź jego logi na runpod.io.",
-    "error_connect": "Pod odpowiada, ale aplikacja nie mogła się połączyć ({{message}})."
+    "error_connect": "Pod odpowiada, ale aplikacja nie mogła się połączyć ({{message}}).",
+    "device": "Urządzenie backendu: {{device}}",
+    "device_cpu": "Backend poda działa na procesorze, a nie na GPU. Sprawdź, czy obraz jest wersją -gpu (make docker-app-gpu na bazie base-gpu) i czy w Ustawienia > Wydajność > Urządzenie obliczeniowe dla tego backendu wybrano Auto lub CUDA.",
+    "backend_key": "Klucz dostępu do poda",
+    "backend_key_desc": "Wygenerowany dla tego poda przy tworzeniu i przekazany jako OMNIVOICE_API_KEY; aplikacja loguje się nim. Twój klucz API RunPod tylko zarządza podami i nigdy nie trafia do poda.",
+    "copy_key": "Kopiuj klucz",
+    "key_copied": "Skopiowano"
   }
 }

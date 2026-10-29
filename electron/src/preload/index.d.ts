@@ -431,6 +431,8 @@ export interface RunPodPublicState {
   error: { kind: RunPodErrorKind; message: string } | null;
   /** The app's backend is this pod. */
   connected: boolean;
+  /** The compute device the pod's backend reports on /health, e.g. "cuda (NVIDIA GeForce RTX 3090)"; null until it answers. */
+  backendDevice: string | null;
 }
 
 export interface VoiceStudioBridge {
@@ -460,6 +462,8 @@ export interface VoiceStudioBridge {
     connect(): Promise<RunPodPublicState>;
     stop(): Promise<RunPodPublicState>;
     terminate(): Promise<RunPodPublicState>;
+    /** Copies the pod's backend access key (its OMNIVOICE_API_KEY) to the clipboard; false when there is none. */
+    copyBackendKey(): Promise<boolean>;
     onState(cb: (state: RunPodPublicState) => void): () => void;
   };
   browser: import('../shared/site-browser').SiteBrowserBridge;

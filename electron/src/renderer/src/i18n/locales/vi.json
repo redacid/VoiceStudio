@@ -4564,6 +4564,12 @@
     "error_api": "Lỗi RunPod: {{message}}",
     "error_timeout": "Pod chưa sẵn sàng kịp. Hãy thử lại hoặc xem nhật ký trên runpod.io.",
     "error_failed": "Pod không khởi động được. Hãy xem nhật ký trên runpod.io.",
-    "error_connect": "Pod có phản hồi, nhưng ứng dụng không kết nối được ({{message}})."
+    "error_connect": "Pod có phản hồi, nhưng ứng dụng không kết nối được ({{message}}).",
+    "device": "Thiết bị backend: {{device}}",
+    "device_cpu": "Backend của pod đang chạy trên CPU, không phải GPU. Hãy kiểm tra image là bản -gpu (make docker-app-gpu dựa trên base-gpu) và Cài đặt > Hiệu năng > Thiết bị tính toán của backend này là Tự động hoặc CUDA.",
+    "backend_key": "Khóa truy cập pod",
+    "backend_key_desc": "Được tạo cho pod này khi tạo và truyền vào dưới dạng OMNIVOICE_API_KEY; ứng dụng đăng nhập bằng khóa này. Khóa API RunPod của bạn chỉ quản lý pod và không bao giờ đến pod.",
+    "copy_key": "Sao chép khóa",
+    "key_copied": "Đã sao chép"
   }
 }

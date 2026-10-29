@@ -147,7 +147,7 @@ describe('RunPodStore', () => {
 });
 
 describe('RunPodController', () => {
-  function setup(statuses: Pod['status'][] = ['STARTING', 'RUNNING']) {
+  function setup(statuses: Pod['status'][] = ['STARTING', 'RUNNING'], devices = ['cuda (RTX)']) {
     const store = new RunPodStore(storePath(), safe, '1.0.0');
     store.update({ apiKey: 'rp-key' });
     const pod = (status: Pod['status']): Pod => ({
@@ -186,7 +186,10 @@ describe('RunPodController', () => {
         return backend.connection;
       }),
     };
-    const fetchImpl = vi.fn(async () => new Response('{}', { status: 200 }));
+    const health = [...devices];
+    const fetchImpl = vi.fn(async () =>
+      json(200, { status: 'ok', device: health.length > 1 ? health.shift() : health[0] }),
+    );
     const ctl = new RunPodController({
       store,
       backend,
@@ -215,6 +218,15 @@ describe('RunPodController', () => {
     );
     expect(backend.useRemote).toHaveBeenCalledWith('https://pod1-3900.proxy.runpod.net', key);
     expect(ctl.state()).toMatchObject({ podId: 'pod1', phase: 'connected' });
+  });
+
+  it('reports the device the pod backend runs on once torch has loaded', async () => {
+    const { ctl, store } = setup(['RUNNING'], ['unknown', 'unknown', 'cpu']);
+    store.update({ podId: 'pod1', backendKey: 'k' });
+    await ctl.connect();
+    await vi.waitFor(() => expect(ctl.state().backendDevice).toBe('cpu'));
+    await ctl.terminate();
+    expect(ctl.state().backendDevice).toBeNull();
   });
 
   it('starts a stopped pod before connecting', async () => {

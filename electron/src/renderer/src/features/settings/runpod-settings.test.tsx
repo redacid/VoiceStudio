@@ -12,6 +12,7 @@ const mock = vi.hoisted(() => ({
   connect: vi.fn(),
   saveSettings: vi.fn(),
   catalog: vi.fn(),
+  copyBackendKey: vi.fn(),
   listener: null as ((state: RunPodPublicState) => void) | null,
   reload: vi.fn(),
 }));
@@ -27,6 +28,7 @@ vi.mock('@/components/bridge', () => ({
       connect: mock.connect,
       saveSettings: mock.saveSettings,
       catalog: mock.catalog,
+      copyBackendKey: mock.copyBackendKey,
       onState: (cb: (state: RunPodPublicState) => void) => {
         mock.listener = cb;
         return () => {};
@@ -62,6 +64,7 @@ function state(over: Partial<RunPodPublicState> = {}): RunPodPublicState {
     phase: 'idle',
     error: null,
     connected: false,
+    backendDevice: null,
     ...over,
   };
 }
@@ -125,4 +128,13 @@ it('terminates only after confirmation', async () => {
   const buttons = await screen.findAllByText('runpod.terminate');
   fireEvent.click(buttons[buttons.length - 1]);
   await waitFor(() => expect(mock.terminate).toHaveBeenCalled());
+});
+
+it('warns when the pod backend runs on the CPU and copies its access key', async () => {
+  mock.copyBackendKey.mockResolvedValue(true);
+  renderSettings(state({ apiKeySet: true, podId: 'pod1', backendDevice: 'cpu' }));
+  expect(await screen.findByText('runpod.device_cpu')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('runpod.copy_key'));
+  expect(await screen.findByText('runpod.key_copied')).toBeInTheDocument();
+  expect(mock.copyBackendKey).toHaveBeenCalled();
 });

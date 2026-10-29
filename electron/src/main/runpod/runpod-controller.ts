@@ -40,6 +40,8 @@ export class RunPodController {
   private phase: RunPodPhase = 'idle';
   private error: RunPodPublicState['error'] = null;
   private pod: Pod | null = null;
+  /** What the pod's backend reports on /health: the way to tell a CUDA backend from a CPU one. */
+  private device: string | null = null;
   private generation = 0;
   private readonly listeners = new Set<(state: RunPodPublicState) => void>();
   private readonly api: (apiKey: string) => RunPodApi;
@@ -71,6 +73,7 @@ export class RunPodController {
       phase: this.phase === 'connected' && !connected ? 'idle' : this.phase,
       error: this.error,
       connected,
+      backendDevice: saved.podId ? this.device : null,
     };
   }
 
@@ -133,6 +136,8 @@ export class RunPodController {
     const apiKey = this.requireKey();
     if (!saved.podId || !saved.backendKey) throw new Error('Create a pod first');
     const generation = this.begin('starting');
+    // A restarted pod may land on another machine.
+    this.device = null;
     const api = this.api(apiKey);
     const deadline = Date.now() + (this.deps.readyTimeoutMs ?? 20 * 60_000);
     try {
@@ -160,7 +165,10 @@ export class RunPodController {
       if (!probe.ok) {
         this.error = { kind: 'connect', message: probe.kind };
         this.set(generation, 'error');
-      } else this.set(generation, 'connected');
+      } else {
+        this.set(generation, 'connected');
+        void this.watchDevice(generation, pod.url);
+      }
     } catch (error) {
       if (generation === this.generation) this.fail(error);
     }
@@ -231,10 +239,23 @@ export class RunPodController {
       const response = await this.fetchImpl(`${url}/health`, {
         signal: AbortSignal.timeout(10_000),
       });
-      return response.ok;
+      if (!response.ok) return false;
+      const body = (await response.json().catch(() => ({}))) as { device?: unknown };
+      if (typeof body.device === 'string' && body.device !== 'unknown') this.device = body.device;
+      return true;
     } catch {
       return false;
     }
+  }
+
+  /** The backend names its device only after torch loads, so /health says "unknown" at first. */
+  private async watchDevice(generation: number, url: string): Promise<void> {
+    for (let attempt = 0; attempt < 24 && !this.device; attempt += 1) {
+      await this.sleep(this.deps.pollMs ?? 5000);
+      if (generation !== this.generation) return;
+      await this.healthy(url);
+    }
+    if (generation === this.generation) this.emit();
   }
 
   private requireKey(): string {
@@ -246,6 +267,7 @@ export class RunPodController {
   private forget(): void {
     this.deps.store.update({ podId: '', backendKey: '' });
     this.pod = null;
+    this.device = null;
     this.phase = 'idle';
   }
 

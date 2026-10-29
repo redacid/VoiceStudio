@@ -147,6 +147,12 @@ you enter your RunPod API key, and only when you act there.
    waits for it to run and answer `/health` (the first start downloads models),
    then switches to it as the remote backend at
    `https://<pod id>-3900.proxy.runpod.net` and reloads.
+   The section then shows the **backend device** the pod reports on `/health`
+   (for example `cuda (NVIDIA GeForce RTX 3090)`) and warns when it is `cpu`:
+   the image is not a `-gpu` build, or the pod backend's processing device is
+   pinned to CPU. **Pod access key** copies that `OMNIVOICE_API_KEY`, e.g. to use
+   the pod from a browser; the RunPod API key only manages pods and is never
+   sent to the pod.
 5. **Stop pod** stops billing (its volume is kept) and switches the app back to
    the local backend; **Start and connect** resumes it; **Terminate pod** deletes
    it with its pod volume. With **Stop the pod when the app quits** on (the

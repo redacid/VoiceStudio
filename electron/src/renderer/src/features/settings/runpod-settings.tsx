@@ -86,6 +86,7 @@ export function RunPodSettings({
   const [failure, setFailure] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmTerminate, setConfirmTerminate] = useState(false);
+  const [keyCopied, setKeyCopied] = useState(false);
   const wasConnected = useRef<boolean | null>(null);
 
   useEffect(() => {
@@ -398,14 +399,49 @@ export function RunPodSettings({
             {t('runpod.connected')}
           </Badge>
         )}
+        {data?.backendDevice && (
+          <Badge
+            variant="outline"
+            className={
+              data.backendDevice.startsWith('cuda') ? 'text-emerald-500' : 'text-amber-500'
+            }
+          >
+            {t('runpod.device', { device: data.backendDevice })}
+          </Badge>
+        )}
         {error && (
           <Badge role="alert" variant="destructive">
             {error}
           </Badge>
         )}
       </div>
+      {data?.backendDevice && !data.backendDevice.startsWith('cuda') && (
+        <p role="alert" className="px-4 pb-3 text-xs text-amber-500">
+          {t('runpod.device_cpu')}
+        </p>
+      )}
       {pod && (
         <p className="px-4 pb-3 font-mono text-xs break-all text-muted-foreground">{pod.url}</p>
+      )}
+      {data?.podId && (
+        <SettingsRow
+          id="runpod-backend-key"
+          title={t('runpod.backend_key')}
+          description={t('runpod.backend_key_desc')}
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              void bridge.runpod
+                .copyBackendKey()
+                .then((copied) => setKeyCopied(copied))
+                .catch(() => setKeyCopied(false))
+            }
+          >
+            {keyCopied ? t('runpod.key_copied') : t('runpod.copy_key')}
+          </Button>
+        </SettingsRow>
       )}
 
       <ConfirmDialog

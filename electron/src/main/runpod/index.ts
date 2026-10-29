@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
+import { app, BrowserWindow, clipboard, ipcMain, safeStorage } from 'electron';
 import { assertTrustedMainFrame } from '../ipc';
 import { sendToLiveWindow } from '../window-safety';
 import { RunPodController, type BackendLike } from './runpod-controller';
@@ -15,6 +15,7 @@ export const RUNPOD_CHANNELS = {
   connect: 'runpod:connect',
   stop: 'runpod:stop',
   terminate: 'runpod:terminate',
+  copyBackendKey: 'runpod:copy-backend-key',
   state: 'runpod:state',
 } as const;
 
@@ -55,6 +56,13 @@ export function startRunPod(
   });
   ipcMain.handle(RUNPOD_CHANNELS.stop, (e) => (trusted(e), ctl.stop()));
   ipcMain.handle(RUNPOD_CHANNELS.terminate, (e) => (trusted(e), ctl.terminate()));
+  // The key goes to the clipboard, never to the renderer.
+  ipcMain.handle(RUNPOD_CHANNELS.copyBackendKey, (e) => {
+    trusted(e);
+    const key = store.get().backendKey;
+    if (key) clipboard.writeText(key);
+    return Boolean(key);
+  });
   return {
     /** After the backend starts: a pod that was the app's backend is started and re-authenticated. */
     resume: () => void ctl.resume().catch(() => {}),

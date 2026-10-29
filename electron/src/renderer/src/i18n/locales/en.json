@@ -4564,6 +4564,12 @@
     "error_api": "RunPod error: {{message}}",
     "error_timeout": "The pod was not ready in time. Try again, or check its logs on runpod.io.",
     "error_failed": "The pod failed to start. Check its logs on runpod.io.",
-    "error_connect": "The pod answers, but the app could not connect to it ({{message}})."
+    "error_connect": "The pod answers, but the app could not connect to it ({{message}}).",
+    "device": "Backend device: {{device}}",
+    "device_cpu": "The pod's backend runs on the CPU, not a GPU. Check that the image is a -gpu build (make docker-app-gpu, built on base-gpu) and that Settings > Performance & Device > Processing device is Auto or CUDA on this backend.",
+    "backend_key": "Pod access key",
+    "backend_key_desc": "Generated for this pod when it was created and passed to it as OMNIVOICE_API_KEY; the app signs in with it. Your RunPod API key only manages pods and never reaches the pod.",
+    "copy_key": "Copy key",
+    "key_copied": "Copied"
   }
 }

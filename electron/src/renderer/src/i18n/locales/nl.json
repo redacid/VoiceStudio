@@ -4564,6 +4564,12 @@
     "error_api": "RunPod-fout: {{message}}",
     "error_timeout": "De pod was niet op tijd klaar. Probeer opnieuw of bekijk de logs op runpod.io.",
     "error_failed": "De pod kon niet starten. Bekijk de logs op runpod.io.",
-    "error_connect": "De pod antwoordt, maar de app kon geen verbinding maken ({{message}})."
+    "error_connect": "De pod antwoordt, maar de app kon geen verbinding maken ({{message}}).",
+    "device": "Backend-apparaat: {{device}}",
+    "device_cpu": "De backend van de pod draait op de CPU, niet op een GPU. Controleer of de image een -gpu-build is (make docker-app-gpu op base-gpu) en of Instellingen > Prestaties > Rekenapparaat voor deze backend op Auto of CUDA staat.",
+    "backend_key": "Toegangssleutel van de pod",
+    "backend_key_desc": "Bij het aanmaken voor deze pod gegenereerd en als OMNIVOICE_API_KEY doorgegeven; de app meldt zich daarmee aan. Je RunPod-API-sleutel beheert alleen pods en komt nooit in de pod.",
+    "copy_key": "Sleutel kopiëren",
+    "key_copied": "Gekopieerd"
   }
 }
