@@ -2360,7 +2360,9 @@
     "locked_explain": "잠긴 음성은 같은 참조 녹음과 시드를 다시 사용하므로 결과를 일관되게 재현할 수 있습니다.",
     "synth_clips_one": "생성된 클립 {{count}}개",
     "synth_clips_other": "생성된 클립 {{count}}개",
-    "unlock_confirm": "잠금을 해제하면 참조 또는 시드가 바뀌므로 이후 오디오를 정확히 재현할 수 없습니다. 계속할까요?"
+    "unlock_confirm": "잠금을 해제하면 참조 또는 시드가 바뀌므로 이후 오디오를 정확히 재현할 수 없습니다. 계속할까요?",
+    "export_voice": "음성 내보내기",
+    "import_voice": "음성 가져오기"
   },
   "nav": {
     "home": "홈",

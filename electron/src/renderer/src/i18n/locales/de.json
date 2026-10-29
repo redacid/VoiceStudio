@@ -2360,7 +2360,9 @@
     "attest_permission": "Ich habe die Erlaubnis der sprechenden Person",
     "attested_own_voice": "Bestätigt: Das ist meine Stimme",
     "attested_permission": "Bestätigt: Ich habe die Erlaubnis der sprechenden Person",
-    "attest_clear": "Bestätigung entfernen"
+    "attest_clear": "Bestätigung entfernen",
+    "export_voice": "Stimme exportieren",
+    "import_voice": "Stimme importieren"
   },
   "nav": {
     "home": "Start",

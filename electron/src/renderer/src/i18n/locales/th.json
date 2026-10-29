@@ -2360,7 +2360,9 @@
     "attest_permission": "ฉันได้รับอนุญาตจากผู้พูด",
     "attested_own_voice": "ยืนยันแล้ว: นี่คือเสียงของฉัน",
     "attested_permission": "ยืนยันแล้ว: ฉันได้รับอนุญาตจากผู้พูด",
-    "attest_clear": "ลบการยืนยัน"
+    "attest_clear": "ลบการยืนยัน",
+    "export_voice": "ส่งออกเสียง",
+    "import_voice": "นำเข้าเสียง"
   },
   "nav": {
     "home": "หน้าหลัก",

@@ -2360,7 +2360,9 @@
     "attest_permission": "我已取得說話者的許可",
     "attested_own_voice": "已確認：這是我的聲音",
     "attested_permission": "已確認：我已取得說話者的許可",
-    "attest_clear": "移除確認"
+    "attest_clear": "移除確認",
+    "export_voice": "匯出聲音",
+    "import_voice": "匯入聲音"
   },
   "nav": {
     "home": "首頁",

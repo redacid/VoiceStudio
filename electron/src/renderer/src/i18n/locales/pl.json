@@ -2384,7 +2384,9 @@
     "attest_permission": "Mam zgodę osoby mówiącej",
     "attested_own_voice": "Potwierdzono: to mój głos",
     "attested_permission": "Potwierdzono: mam zgodę osoby mówiącej",
-    "attest_clear": "Usuń potwierdzenie"
+    "attest_clear": "Usuń potwierdzenie",
+    "export_voice": "Eksportuj głos",
+    "import_voice": "Importuj głos"
   },
   "nav": {
     "home": "Strona główna",

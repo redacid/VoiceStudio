@@ -2408,7 +2408,9 @@
     "attest_permission": "لديّ إذن من صاحب الصوت",
     "attested_own_voice": "تم التأكيد: هذا صوتي",
     "attested_permission": "تم التأكيد: لديّ إذن من صاحب الصوت",
-    "attest_clear": "إزالة التأكيد"
+    "attest_clear": "إزالة التأكيد",
+    "export_voice": "تصدير الصوت",
+    "import_voice": "استيراد صوت"
   },
   "nav": {
     "home": "الرئيسية",

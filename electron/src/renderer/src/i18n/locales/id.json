@@ -2360,7 +2360,9 @@
     "attest_permission": "Saya punya izin dari pembicara",
     "attested_own_voice": "Dikonfirmasi: ini suara saya",
     "attested_permission": "Dikonfirmasi: saya punya izin dari pembicara",
-    "attest_clear": "Hapus konfirmasi"
+    "attest_clear": "Hapus konfirmasi",
+    "export_voice": "Ekspor suara",
+    "import_voice": "Impor suara"
   },
   "nav": {
     "home": "Beranda",

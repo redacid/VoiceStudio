@@ -12,6 +12,7 @@ vi.mock('@/lib/store/workspace', () => ({
 }));
 vi.mock('./voices-sidebar', () => ({ SavedVoices: () => <div>voice library</div> }));
 vi.mock('./edit-profile', () => ({ EditProfile: () => null }));
+vi.mock('./persona-export', () => ({ VoiceImportButton: () => <button>import voice</button> }));
 vi.mock('@/components/app-shell/workspace-header', () => ({
   WorkspaceHeader: ({ children }: { children: ReactNode }) => <header>{children}</header>,
 }));
@@ -26,6 +27,7 @@ afterEach(() => {
 it('keeps saved profiles as the page content and exposes both creation paths', () => {
   render(<SavedVoicesPage />);
   expect(screen.getByText('voice library')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'import voice' })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: 'clone.title' }));
   expect(mocks.navigate).toHaveBeenCalledWith({ to: '/clone' });

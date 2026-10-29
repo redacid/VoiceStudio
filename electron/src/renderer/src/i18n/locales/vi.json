@@ -2360,7 +2360,9 @@
     "attest_permission": "Tôi có sự cho phép của người nói",
     "attested_own_voice": "Đã xác nhận: đây là giọng của tôi",
     "attested_permission": "Đã xác nhận: tôi có sự cho phép của người nói",
-    "attest_clear": "Gỡ xác nhận"
+    "attest_clear": "Gỡ xác nhận",
+    "export_voice": "Xuất giọng nói",
+    "import_voice": "Nhập giọng nói"
   },
   "nav": {
     "home": "Trang chủ",

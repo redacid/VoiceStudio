@@ -169,6 +169,11 @@ RunPod's proxy closes a single request after 100 seconds; long jobs that poll
 are unaffected. A stopped pod can come back without a free GPU on its machine;
 terminate it and create a new one (on a network volume nothing is lost).
 
+Voices live on the backend that made them, so voices saved locally are not on
+the pod. To move one, use the **Export voice** button on its card under
+**Saved voices** (a `.ovsvoice` bundle with the voice clip), connect to the
+other backend, and use **Import voice** at the top of **Saved voices**.
+
 ## Security notes
 
 - **Plain HTTP is sniffable.** A bearer key over `http://` on a hostile

@@ -2362,7 +2362,9 @@
     "attest_permission": "Tenho a autorização da pessoa que fala",
     "attested_own_voice": "Confirmado: esta é a minha voz",
     "attested_permission": "Confirmado: tenho a autorização da pessoa que fala",
-    "attest_clear": "Remover confirmação"
+    "attest_clear": "Remover confirmação",
+    "export_voice": "Exportar voz",
+    "import_voice": "Importar voz"
   },
   "nav": {
     "home": "Início",

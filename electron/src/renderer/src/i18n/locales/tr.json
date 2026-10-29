@@ -2360,7 +2360,9 @@
     "attest_permission": "Konuşan kişinin iznine sahibim",
     "attested_own_voice": "Onaylandı: bu benim sesim",
     "attested_permission": "Onaylandı: konuşan kişinin iznine sahibim",
-    "attest_clear": "Onayı kaldır"
+    "attest_clear": "Onayı kaldır",
+    "export_voice": "Sesi dışa aktar",
+    "import_voice": "Ses içe aktar"
   },
   "nav": {
     "home": "Ana sayfa",

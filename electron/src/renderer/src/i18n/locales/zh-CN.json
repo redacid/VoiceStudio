@@ -2360,7 +2360,9 @@
     "try_voice": "测试此声音",
     "unlock_confirm": "解锁会更改参考录音或随机种子，之后的音频将无法精确复现。是否继续？",
     "unlocked": "声音已解锁。",
-    "used_title": "此声音的使用位置"
+    "used_title": "此声音的使用位置",
+    "export_voice": "导出声音",
+    "import_voice": "导入声音"
   },
   "nav": {
     "home": "主页",

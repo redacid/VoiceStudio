@@ -2360,7 +2360,9 @@
     "attest_permission": "मेरे पास वक्ता की अनुमति है",
     "attested_own_voice": "पुष्टि हुई: यह मेरी आवाज़ है",
     "attested_permission": "पुष्टि हुई: मेरे पास वक्ता की अनुमति है",
-    "attest_clear": "पुष्टि हटाएँ"
+    "attest_clear": "पुष्टि हटाएँ",
+    "export_voice": "आवाज़ निर्यात करें",
+    "import_voice": "आवाज़ आयात करें"
   },
   "nav": {
     "home": "होम",

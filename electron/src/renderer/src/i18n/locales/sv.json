@@ -2360,7 +2360,9 @@
     "attest_permission": "Jag har talarens tillstånd",
     "attested_own_voice": "Bekräftat: det här är min röst",
     "attested_permission": "Bekräftat: jag har talarens tillstånd",
-    "attest_clear": "Ta bort bekräftelse"
+    "attest_clear": "Ta bort bekräftelse",
+    "export_voice": "Exportera röst",
+    "import_voice": "Importera röst"
   },
   "nav": {
     "home": "Hem",

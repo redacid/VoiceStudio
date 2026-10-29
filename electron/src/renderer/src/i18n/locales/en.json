@@ -2446,7 +2446,9 @@
     "attest_permission": "I have the speaker’s permission",
     "attested_own_voice": "Confirmed: this is my voice",
     "attested_permission": "Confirmed: I have the speaker’s permission",
-    "attest_clear": "Remove confirmation"
+    "attest_clear": "Remove confirmation",
+    "export_voice": "Export voice",
+    "import_voice": "Import voice"
   },
   "profiles": {
     "locked": "Voice locked! Identity is now consistent across all generations.",

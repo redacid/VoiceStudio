@@ -2360,7 +2360,9 @@
     "attest_permission": "Ik heb toestemming van de spreker",
     "attested_own_voice": "Bevestigd: dit is mijn stem",
     "attested_permission": "Bevestigd: ik heb toestemming van de spreker",
-    "attest_clear": "Bevestiging verwijderen"
+    "attest_clear": "Bevestiging verwijderen",
+    "export_voice": "Stem exporteren",
+    "import_voice": "Stem importeren"
   },
   "nav": {
     "home": "Start",

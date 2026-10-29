@@ -2446,7 +2446,9 @@
     "attest_permission": "Teño o permiso do orador",
     "attested_own_voice": "Confirmado: esta é a miña voz",
     "attested_permission": "Confirmado: teño o permiso do falante",
-    "attest_clear": "Eliminar a confirmación"
+    "attest_clear": "Eliminar a confirmación",
+    "export_voice": "Exportar voz",
+    "import_voice": "Importar voz"
   },
   "profiles": {
     "locked": "Voz bloqueada! Agora a identidade é coherente en todas as xeracións.",

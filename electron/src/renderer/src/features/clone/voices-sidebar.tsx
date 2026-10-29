@@ -38,6 +38,7 @@ import { selectCloneProfile } from '@/lib/store/reference';
 import { cn } from '@/lib/utils';
 import { runRendererTask } from '@/lib/global-error-recovery';
 import { ConfirmDialog } from './confirm-dialog';
+import { VoiceExportButton } from './persona-export';
 import { displayTitle, formatRelative } from './format';
 import {
   DESIGN_DRAFT_EVENT,
@@ -340,6 +341,9 @@ export function SavedVoices({
                   >
                     <PencilIcon />
                   </Button>
+                  {profile.ref_audio_path || profile.locked_audio_path ? (
+                    <VoiceExportButton profile={profile} />
+                  ) : null}
                   <Button
                     variant="ghost"
                     size="icon-xs"

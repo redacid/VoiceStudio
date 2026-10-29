@@ -2360,7 +2360,9 @@
     "attest_permission": "話者の許可を得ています",
     "attested_own_voice": "確認済み：自分の声です",
     "attested_permission": "確認済み：話者の許可を得ています",
-    "attest_clear": "確認を取り消す"
+    "attest_clear": "確認を取り消す",
+    "export_voice": "音声をエクスポート",
+    "import_voice": "音声をインポート"
   },
   "nav": {
     "home": "ホーム",

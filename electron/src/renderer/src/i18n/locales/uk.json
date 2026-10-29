@@ -2384,7 +2384,9 @@
     "attest_permission": "Я маю дозвіл мовця",
     "attested_own_voice": "Підтверджено: це мій голос",
     "attested_permission": "Підтверджено: я маю дозвіл мовця",
-    "attest_clear": "Вилучити підтвердження"
+    "attest_clear": "Вилучити підтвердження",
+    "export_voice": "Експортувати голос",
+    "import_voice": "Імпортувати голос"
   },
   "nav": {
     "home": "Головна",
