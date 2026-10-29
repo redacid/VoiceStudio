@@ -188,3 +188,6 @@ backend/assets/samples/demo/dubbing/*.src.wav
 # handoff (canonical in vssaas) and Microsoft Store listing text drafts.
 /account_login/
 /store-*-en.txt
+
+# make runpod-*: the managed pod id and its backend key
+.runpod.json

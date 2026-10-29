@@ -126,6 +126,33 @@ bearer sessions are tab-scoped; closing the tab requires re-entry. If a request
 same gate shows a LAN-share **PIN** prompt instead when network sharing — not a
 remote key — is what's gating access.
 
+## RunPod GPU pod (from a source checkout)
+
+`make runpod-*` (`scripts/runpod.mjs`) rents one RunPod GPU pod running the
+GPU app image and prints the URL and key to enter in step 3. It calls RunPod's
+REST API only when you run a command, with your own `RUNPOD_API_KEY`.
+
+1. Create an API key with **All** permissions on runpod.io (Settings > API Keys)
+   and put it in the git-ignored `.env`: `RUNPOD_API_KEY=...`. Optional settings:
+   `RUNPOD_GPU` (default `NVIDIA GeForce RTX 4090`; `make runpod-gpus` lists ids
+   and prices), `RUNPOD_IMAGE` (default `redacid/voicestudio:<version>-gpu`),
+   `RUNPOD_CLOUD`, `RUNPOD_DATA_CENTER`, `RUNPOD_NETWORK_VOLUME`,
+   `RUNPOD_VOLUME_SIZE`, `RUNPOD_DISK`, `HF_TOKEN`.
+2. `make runpod-deploy` builds and pushes the GPU image ([Docker](install/docker.md))
+   and creates the pod; `make runpod-create` uses an image already pushed
+   (`DRY_RUN=1` prints the request with secrets hidden). The pod exposes
+   `3900/http`, keeps its data on a volume at `/app/omnivoice_data`, and gets a
+   newly generated `OMNIVOICE_API_KEY`. The command waits for `/health`.
+3. In the app, Settings > Remote backend: the URL
+   `https://<pod id>-3900.proxy.runpod.net` and the API key from
+   `make runpod-status`.
+4. `make runpod-stop` stops billing (the volume is kept), `make runpod-start`
+   resumes, `make runpod-terminate` deletes the pod and its pod volume. The pod
+   id and key live in the git-ignored `.runpod.json`.
+
+GPU hosts need CUDA 12.8 or newer; the request asks for it. RunPod's proxy
+closes a single request after 100 seconds; long jobs that poll are unaffected.
+
 ## Security notes
 
 - **Plain HTTP is sniffable.** A bearer key over `http://` on a hostile

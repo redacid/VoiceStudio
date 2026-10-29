@@ -5,7 +5,8 @@
 	setup dev web api \
 	docker-base docker-base-cpu docker-base-gpu docker-app docker-app-cpu docker-app-gpu \
 	docker-build docker-push-base docker-push-app docker-push \
-	docker-run docker-run-cpu docker-run-gpu docker-up docker-logs docker-stop
+	docker-run docker-run-cpu docker-run-gpu docker-up docker-logs docker-stop \
+	runpod-gpus runpod-create runpod-status runpod-start runpod-stop runpod-terminate runpod-deploy
 
 .DEFAULT_GOAL := help
 
@@ -118,6 +119,32 @@ docker-logs: ## Follow logs of the background container
 
 docker-stop: ## Stop the background container (data volume is kept)
 	$(DOCKER) stop $(CONTAINER)
+
+# ── RunPod (GPU pod with the app image; settings in .env, see scripts/runpod.mjs)
+
+RUNPOD := node scripts/runpod.mjs
+
+runpod-gpus: ## List RunPod GPUs that can run the image, with prices
+	$(RUNPOD) gpus
+
+runpod-create: ## Create a pod from IMAGE:<version>-gpu and wait until it answers (DRY_RUN=1 shows the request)
+	$(RUNPOD) create $(if $(DRY_RUN),--dry-run)
+
+runpod-status: ## Show the pod, its backend URL and API key
+	$(RUNPOD) status
+
+runpod-start: ## Start the stopped pod and wait until it answers
+	$(RUNPOD) start
+
+runpod-stop: ## Stop the pod (billing stops, its volume is kept)
+	$(RUNPOD) stop
+
+runpod-terminate: ## Delete the pod and its pod volume
+	$(RUNPOD) terminate
+
+runpod-deploy: docker-app-gpu ## Build and push the GPU app image, then create the pod
+	$(DOCKER) push $(IMAGE):$(IMAGE_TAG)-gpu
+	RUNPOD_IMAGE=$(IMAGE):$(IMAGE_TAG)-gpu $(RUNPOD) create
 
 # ── Release ──────────────────────────────────────────────────────────────
 
