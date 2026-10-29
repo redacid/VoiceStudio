@@ -350,6 +350,89 @@ export interface AccountPublicState {
   links: { profile: string; plan: string } | null;
 }
 
+// ── RunPod (Settings > Sharing > RunPod) ─────────────────────────────────
+export type RunPodCloud = 'SECURE' | 'COMMUNITY';
+export type RunPodAvailability = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+export type RunPodPodStatus =
+  | 'PROVISIONING'
+  | 'STARTING'
+  | 'RUNNING'
+  | 'EXITED'
+  | 'ERROR'
+  | 'TERMINATED';
+
+export interface RunPodPod {
+  id: string;
+  name: string;
+  status: RunPodPodStatus;
+  image: string;
+  /** "NVIDIA GeForce RTX 4090" or "2 × NVIDIA A40". */
+  gpu: string | null;
+  dataCenter: string | null;
+  /** Dollars per hour while it runs. */
+  cost: number | null;
+  /** Where the backend in the pod answers. */
+  url: string;
+}
+
+export interface RunPodCatalog {
+  gpus: {
+    id: string;
+    memory: number;
+    /** Dollars per hour for one GPU in the chosen cloud. */
+    price: number;
+    availability: RunPodAvailability;
+    dataCenters: string[];
+  }[];
+  volumes: { id: string; name: string; size: number; dataCenter: string }[];
+}
+
+/** How a new pod is made, and what the app does with it. */
+export interface RunPodSettings {
+  image: string;
+  gpu: string;
+  cloud: RunPodCloud;
+  dataCenter: string;
+  networkVolume: string;
+  volumeSize: number;
+  disk: number;
+  /** Stop the pod when the app quits, so it is not billed while nobody uses it. */
+  stopOnQuit: boolean;
+}
+
+export type RunPodPhase =
+  | 'idle'
+  | 'creating'
+  | 'starting'
+  | 'waiting'
+  | 'connecting'
+  | 'connected'
+  | 'stopping'
+  | 'error';
+
+export type RunPodErrorKind =
+  | 'network'
+  | 'auth'
+  | 'gone'
+  | 'api'
+  | 'timeout'
+  | 'failed'
+  | 'connect';
+
+/** What the renderer sees; the keys only as whether they are set. */
+export interface RunPodPublicState {
+  settings: RunPodSettings;
+  apiKeySet: boolean;
+  /** False when the OS keychain is unavailable: keys are kept until the app quits. */
+  persistent: boolean;
+  podId: string;
+  pod: RunPodPod | null;
+  phase: RunPodPhase;
+  error: { kind: RunPodErrorKind; message: string } | null;
+  /** The app's backend is this pod. */
+  connected: boolean;
+}
+
 export interface VoiceStudioBridge {
   /** VoiceStudio Cloud account; never carries a token. */
   account: {
@@ -363,6 +446,21 @@ export interface VoiceStudioBridge {
     }): Promise<AccountPublicState>;
     updateProfile(patch: { display_name?: string }): Promise<AccountPublicState>;
     onState(cb: (state: AccountPublicState) => void): () => void;
+  };
+  runpod: {
+    get(): Promise<RunPodPublicState>;
+    /** Re-reads the pod from RunPod. */
+    refresh(): Promise<RunPodPublicState>;
+    saveSettings(settings: Partial<RunPodSettings>): Promise<RunPodPublicState>;
+    /** "" clears the saved key. */
+    setApiKey(key: string): Promise<RunPodPublicState>;
+    catalog(cloud: RunPodCloud): Promise<RunPodCatalog>;
+    create(): Promise<RunPodPublicState>;
+    /** Starts the pod if needed and makes it the app's backend; progress arrives via onState. */
+    connect(): Promise<RunPodPublicState>;
+    stop(): Promise<RunPodPublicState>;
+    terminate(): Promise<RunPodPublicState>;
+    onState(cb: (state: RunPodPublicState) => void): () => void;
   };
   browser: import('../shared/site-browser').SiteBrowserBridge;
   repair: {

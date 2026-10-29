@@ -10,6 +10,7 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage, session, shell, Tray } 
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { BackendSupervisor, backendRoot } from './backend';
 import { registerIpc, wireWindowMaximizeEvents } from './ipc';
+import { startRunPod } from './runpod';
 import { APP_ORIGIN, installAppProtocol, registerAppScheme } from './protocol';
 import { electronProxyPort, startDevBackendProxy } from './dev-backend-proxy';
 import { DesktopUpdater, registerUpdateIpc } from './updater';
@@ -60,6 +61,7 @@ let closeCapture: (() => void) | null = null;
 let closeDevProxy: (() => Promise<void>) | null = null;
 let closeUpdates: (() => void) | null = null;
 let closeRepairAgents: (() => void) | null = null;
+let runpod: ReturnType<typeof startRunPod> | null = null;
 let closeAccount: (() => void) | null = null;
 let quitPreparation: Promise<void> | null = null;
 
@@ -103,6 +105,13 @@ async function tearDownNativeResources(): Promise<void> {
   closeRepairAgents = null;
   closeAccount?.();
   closeAccount = null;
+  // A pod is billed while it runs: stop it on the way out when the settings say so.
+  const pod = runpod;
+  runpod = null;
+  if (pod) {
+    await pod.stopOnQuit();
+    pod.close();
+  }
   tray?.destroy();
   tray = null;
   const proxyTeardown = closeDevProxy?.() ?? Promise.resolve();
@@ -273,6 +282,7 @@ if (process.env.VOICESTUDIO_ALLOW_MULTIPLE_INSTANCES !== '1' && !app.requestSing
           app.exit(0);
         },
       );
+      runpod = startRunPod(backend, () => mainWindow);
       // Before backend.start(): the backend inherits the token-bridge env.
       closeAccount = await startAccount({
         getMainWindow: () => mainWindow,
@@ -342,6 +352,7 @@ if (process.env.VOICESTUDIO_ALLOW_MULTIPLE_INSTANCES !== '1' && !app.requestSing
         activateLiveWindow(mainWindow);
       });
       observeMainProcessTask(backend.start(), mainErrors, 'Backend startup');
+      runpod?.resume();
 
       app.on('activate', () => {
         if (!isLiveWindow(mainWindow)) mainWindow = createWindow();

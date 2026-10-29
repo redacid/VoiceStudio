@@ -126,32 +126,42 @@ bearer sessions are tab-scoped; closing the tab requires re-entry. If a request
 same gate shows a LAN-share **PIN** prompt instead when network sharing — not a
 remote key — is what's gating access.
 
-## RunPod GPU pod (from a source checkout)
+## RunPod GPU pod
 
-`make runpod-*` (`scripts/runpod.mjs`) rents one RunPod GPU pod running the
-GPU app image and prints the URL and key to enter in step 3. It calls RunPod's
-REST API only when you run a command, with your own `RUNPOD_API_KEY`.
+The app can rent one RunPod GPU pod running the GPU image and use it as its
+backend: **Settings → Sharing → RunPod GPU pod**. RunPod is contacted only after
+you enter your RunPod API key, and only when you act there.
 
-1. Create an API key with **All** permissions on runpod.io (Settings > API Keys)
-   and put it in the git-ignored `.env`: `RUNPOD_API_KEY=...`. Optional settings:
-   `RUNPOD_GPU` (default `NVIDIA GeForce RTX 4090`; `make runpod-gpus` lists ids
-   and prices), `RUNPOD_IMAGE` (default `redacid/voicestudio:<version>-gpu`),
-   `RUNPOD_CLOUD`, `RUNPOD_DATA_CENTER`, `RUNPOD_NETWORK_VOLUME`,
-   `RUNPOD_VOLUME_SIZE`, `RUNPOD_DISK`, `HF_TOKEN`.
-2. `make runpod-deploy` builds and pushes the GPU image ([Docker](install/docker.md))
-   and creates the pod; `make runpod-create` uses an image already pushed
-   (`DRY_RUN=1` prints the request with secrets hidden). The pod exposes
-   `3900/http`, keeps its data on a volume at `/app/omnivoice_data`, and gets a
-   newly generated `OMNIVOICE_API_KEY`. The command waits for `/health`.
-3. In the app, Settings > Remote backend: the URL
-   `https://<pod id>-3900.proxy.runpod.net` and the API key from
-   `make runpod-status`.
-4. `make runpod-stop` stops billing (the volume is kept), `make runpod-start`
-   resumes, `make runpod-terminate` deletes the pod and its pod volume. The pod
-   id and key live in the git-ignored `.runpod.json`.
+1. Build and push the GPU image to a registry RunPod can pull from
+   (`make docker-app-gpu && make docker-push-app`, see [Docker](install/docker.md)),
+   giving `redacid/voicestudio:<version>-gpu`.
+2. Create an API key with **All** permissions on runpod.io (Settings > API Keys)
+   and paste it under **RunPod API key**. It is stored encrypted with the OS
+   keychain; without a usable keychain it is kept only until the app quits.
+3. Check the **Docker image**, click **Load GPUs** to choose a GPU by price and
+   availability (only NVIDIA GPUs offered with CUDA 12.8+ are listed), and pick
+   where the data lives: a pod volume (deleted with the pod) or one of your
+   network volumes (outlives the pod and ties it to its data center).
+4. **Create pod**. The pod exposes `3900/http`, mounts the data at
+   `/app/omnivoice_data`, and gets a newly generated `OMNIVOICE_API_KEY`. The app
+   waits for it to run and answer `/health` (the first start downloads models),
+   then switches to it as the remote backend at
+   `https://<pod id>-3900.proxy.runpod.net` and reloads.
+5. **Stop pod** stops billing (its volume is kept) and switches the app back to
+   the local backend; **Start and connect** resumes it; **Terminate pod** deletes
+   it with its pod volume. With **Stop the pod when the app quits** on (the
+   default), quitting stops a running pod; the next start of the app starts it
+   again when it was the app's backend.
 
-GPU hosts need CUDA 12.8 or newer; the request asks for it. RunPod's proxy
-closes a single request after 100 seconds; long jobs that poll are unaffected.
+The same pod can be driven from a source checkout with `make runpod-*`
+(`scripts/runpod.mjs`, settings in the git-ignored `.env`: `RUNPOD_API_KEY`,
+`RUNPOD_GPU`, `RUNPOD_IMAGE`, `RUNPOD_CLOUD`, `RUNPOD_DATA_CENTER`,
+`RUNPOD_NETWORK_VOLUME`, `RUNPOD_VOLUME_SIZE`, `RUNPOD_DISK`, `HF_TOKEN`); it
+prints the URL and key to enter in step 3 of the remote backend above.
+
+RunPod's proxy closes a single request after 100 seconds; long jobs that poll
+are unaffected. A stopped pod can come back without a free GPU on its machine;
+terminate it and create a new one (on a network volume nothing is lost).
 
 ## Security notes
 

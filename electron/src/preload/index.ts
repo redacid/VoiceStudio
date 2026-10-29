@@ -9,6 +9,7 @@ import type {
   VoiceStudioBridge,
   RepairAgentEvent,
   AccountPublicState,
+  RunPodPublicState,
 } from './index.d';
 
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -94,6 +95,18 @@ const bridge: VoiceStudioBridge = {
     updateProfile: (patch) =>
       ipcRenderer.invoke('account:update-profile', patch) as Promise<AccountPublicState>,
     onState: (cb) => subscribe<AccountPublicState>('account:state', cb),
+  },
+  runpod: {
+    get: () => ipcRenderer.invoke('runpod:get'),
+    refresh: () => ipcRenderer.invoke('runpod:refresh'),
+    saveSettings: (settings) => ipcRenderer.invoke('runpod:save-settings', settings),
+    setApiKey: (key) => ipcRenderer.invoke('runpod:set-api-key', key),
+    catalog: (cloud) => ipcRenderer.invoke('runpod:catalog', cloud),
+    create: () => ipcRenderer.invoke('runpod:create'),
+    connect: () => ipcRenderer.invoke('runpod:connect'),
+    stop: () => ipcRenderer.invoke('runpod:stop'),
+    terminate: () => ipcRenderer.invoke('runpod:terminate'),
+    onState: (cb) => subscribe<RunPodPublicState>('runpod:state', cb),
   },
   backend: {
     getStatus: () => ipcRenderer.invoke('backend:getStatus') as Promise<BackendStatus>,

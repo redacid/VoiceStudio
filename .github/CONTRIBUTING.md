@@ -495,6 +495,12 @@ hard rules from the first prompt.
     the user (`electron/src/main/updater.ts`).
   - **yt-dlp updates** from PyPI, only when the user clicks update
     (`backend/services/media_tools.py`).
+  - **RunPod, only after the user enters a RunPod API key** (Settings →
+    Sharing → RunPod GPU pod; off without a key): RunPod's REST API at
+    `api.runpod.io` for the GPU catalog and the user's own pod (create, start,
+    stop, terminate, and a stop on quit when that switch is on), and the pod's
+    backend through `<pod>-3900.proxy.runpod.net` once the user connects to it
+    (`electron/src/main/runpod/`, `scripts/runpod.mjs`).
   - **VoiceStudio Cloud account features, only after the user turns them on**
     (first-run setup or Settings → Account; off by default, skipping = off):
     browser sign-in against `voicestudio.sh/identity` and the account API at

@@ -21,6 +21,7 @@ import { apiJson, describeError } from '@/lib/api/client';
 import { SettingsRow, SettingsSection } from './settings-layout';
 import { McpBindingsSettings } from './mcp-bindings-settings';
 import { RemoteBackendSettings } from './remote-backend-settings';
+import { RunPodSettings } from './runpod-settings';
 import { SharingPorts } from './sharing-ports';
 
 interface NetworkState {
@@ -229,6 +230,7 @@ export function SharingSettings() {
   return (
     <>
       <RemoteBackendSettings />
+      <RunPodSettings />
       <SettingsSection icon={WifiIcon} title={t('sharing.title')}>
         <SettingsRow
           id="sharing-lan"
